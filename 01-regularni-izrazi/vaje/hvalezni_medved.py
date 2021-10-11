@@ -1,3 +1,6 @@
+import re
+
+
 ###############################################################################
 # Hvaležni medved
 #
@@ -7,7 +10,7 @@
 ###############################################################################
 
 test_text = """Gori nekje v gorah, ne ve se več, ali je bilo pri Macigoju ali
-Naravniku, je šivala gospodinja v senci pod drevesom in zibala otroka. Naenkrat
+Naravniku, je šival gospodinja v senci pod drevesom in zibala otroka. Naenkrat
 prilomasti - pa prej ni ničesar opazila - medved in ji moli taco, v kateri je
 tičal velik, debel trn. Žena se je prestrašila, a medved le milo in pohlevno
 godrnja. Zato se žena ojunači in mu izdere trn iz tace. Mrcina kosmata pa zvrne
@@ -26,6 +29,11 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 # {'izdere', 'debel', 'oddide', 'začudeno'}
 ###############################################################################
 
+def find_words(test_text, niz):
+    matches = re.findall(rf"\b\w*{niz}.*?\b", test_text)
+    return set(matches)
+
+print(find_words(test_text, "de"))
 
 ###############################################################################
 # 2) Sestavite funkcijo [find_prefix], ki vrne množico vseh besed, ki se
@@ -35,7 +43,11 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 # {'zibala', 'zibel', 'zibelko'}
 ###############################################################################
 
+def find_prefix(test_text, niz):
+    matches = re.findall(rf"\b{niz}.*?\b", test_text)
+    return set(matches)
 
+print((find_prefix(test_text, "zi")))
 ###############################################################################
 # 3) Sestavite funkcijo [find_suffix], ki vrne množico vseh besed, ki se
 #    pojavijo v nizu in imajo dano pripono.
@@ -44,7 +56,11 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 # {'zibala', 'razveselila', 'prestrašila', 'šivala', 'opazila', 'tla'}
 ###############################################################################
 
+def find_suffix(test_text, niz):
+    matches = re.findall(rf"\b\w*{niz}\b", test_text)
+    return set(matches)
 
+print(find_suffix(test_text, "la"))
 ###############################################################################
 # 4) Sestavite funkcijo [double_letters], ki sprejme niz in vrne množico vseh
 #    besed, ki vsebujejo podvojene črke.
@@ -52,3 +68,10 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 # >>> double_letters('A volunteer is worth twenty pressed men.')
 # {'volunteer', 'pressed'}
 ###############################################################################
+
+def double_letters(besedilo):
+    matches = re.findall(r"(\b\w*(\w)\2\w*\b)", besedilo)
+    print()
+    return set(m[0] for m in matches)
+
+print(double_letters(test_text))
