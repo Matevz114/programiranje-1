@@ -1,16 +1,17 @@
 import csv
 import os
-
+import requests
+import re
 ###############################################################################
 # Najprej definirajmo nekaj pomožnih orodij za pridobivanje podatkov s spleta.
 ###############################################################################
 
 # definirajte URL glavne strani bolhe za oglase z mačkami
-cats_frontpage_url = 'http://www.bolha.com/zivali/male-zivali/macke/'
+AMD_frontpage_url = 'https://www.bolha.com/amd-graficne-kartice'
 # mapa, v katero bomo shranili podatke
-cat_directory = 'TODO'
+AMD_directory = 'U:\Matevz vaje\graficne_vaje'
 # ime datoteke v katero bomo shranili glavno stran
-frontpage_filename = 'TODO'
+frontpage_filename = 'graficne.txt'
 # ime CSV datoteke v katero bomo shranili podatke
 csv_filename = 'TODO'
 
@@ -19,15 +20,24 @@ def download_url_to_string(url):
     """Funkcija kot argument sprejme niz in poskusi vrniti vsebino te spletne
     strani kot niz. V primeru, da med izvajanje pride do napake vrne None.
     """
+    link = url
+    
+    
     try:
+        f = requests.get(link)
         # del kode, ki morda sproži napako
         page_content = 'TODO'
-    except 'TODO':
+    except requests.exceptions.ConnectionError as e:
         # koda, ki se izvede pri napaki
         # dovolj je če izpišemo opozorilo in prekinemo izvajanje funkcije
-        raise NotImplementedError()
+        print(f"napaka pri {link}:\n{e}")
+        return ""
     # nadaljujemo s kodo če ni prišlo do napake
-    raise NotImplementedError()
+    if f.status_code == requests.codes.ok:
+        return f.text
+    else:
+        raise requests.HTTPError(f"Ni ok: {f.status_code}")
+    
 
 
 def save_string_to_file(text, directory, filename):
@@ -45,10 +55,14 @@ def save_string_to_file(text, directory, filename):
 # Definirajte funkcijo, ki prenese glavno stran in jo shrani v datoteko.
 
 
-def save_frontpage(page, directory, filename):
+def save_frontpage(directory, filename):
     """Funkcija shrani vsebino spletne strani na naslovu "page" v datoteko
     "directory"/"filename"."""
-    raise NotImplementedError()
+    text = download_url_to_string(AMD_frontpage_url)
+    save_string_to_file(text, directory, filename)
+    return None
+
+    """"raise NotImplementedError()"""
 
 
 ###############################################################################
@@ -58,6 +72,10 @@ def save_frontpage(page, directory, filename):
 
 def read_file_to_string(directory, filename):
     """Funkcija vrne celotno vsebino datoteke "directory"/"filename" kot niz."""
+    path = os.path.join(directory, filename)
+    with open(path, encoding="utf_8") as datoteka:
+        niz = datoteka.read()
+    return niz
     raise NotImplementedError()
 
 
@@ -70,7 +88,13 @@ def read_file_to_string(directory, filename):
 def page_to_ads(page_content):
     """Funkcija poišče posamezne oglase, ki se nahajajo v spletni strani in
     vrne seznam oglasov."""
-    raise NotImplementedError()
+    rx = re.compile(r'<li class="EntityList-item EntityList-item--'
+                    r'(.*?)</article>',
+                    re.DOTALL)
+    
+    ads = rx.findall(page_content)
+    return ads
+
 
 
 # Definirajte funkcijo, ki sprejme niz, ki predstavlja oglas, in izlušči
@@ -80,6 +104,11 @@ def page_to_ads(page_content):
 def get_dict_from_ad_block(block):
     """Funkcija iz niza za posamezen oglasni blok izlušči podatke o imenu, ceni
     in opisu ter vrne slovar, ki vsebuje ustrezne podatke."""
+    rx = re.compile(r'<h3 class="entity-title"><a name='
+                    r'(.*?)</h3>',
+                    re.DOTALL)
+    data = rx.search(block)
+    
     raise NotImplementedError()
 
 
