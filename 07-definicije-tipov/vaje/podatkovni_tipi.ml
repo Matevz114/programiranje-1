@@ -21,7 +21,14 @@
  - : euro = Euro 0.4305
 [*----------------------------------------------------------------------------*)
 
+type euro = Euro of float
+type dollar = Dollar of float
 
+let euro_to_dollar (Euro x) = 
+       Dollar (x *. 1.13)
+
+let dollar_to_euro (Dollar x) = 
+       Euro (x *. 0.89)
 
 (*----------------------------------------------------------------------------*]
  Definirajte tip [currency] kot en vsotni tip z konstruktorji za jen, funt
@@ -34,6 +41,13 @@
  # to_pound (Yen 100.);;
  - : currency = Pound 0.007
 [*----------------------------------------------------------------------------*)
+type currency = Jen of float | Funt of float  | Krona of float
+
+let to_pound = function
+       | Jen x -> Funt (x *. 0.007)
+       | Funt x -> Funt (x)
+       | Krona x -> Funt (x *. 0.085)
+
 
 
 
@@ -57,6 +71,12 @@
  Nato napišite testni primer, ki bi predstavljal "[5; true; false; 7]".
 [*----------------------------------------------------------------------------*)
 
+type intbool_list = 
+       | Prazen
+       | Int of int * intbool_list
+       | Bool of bool * intbool_list
+
+let test = Int(5, Bool(true, Bool(false, Int(7, Nil))))
 
 
 (*----------------------------------------------------------------------------*]
@@ -65,14 +85,23 @@
  oz. [f_bool].
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_map = ()
+let rec intbool_map f_int f_bool = function
+       | Int(x, xs) -> Int(f_int x, intbool_map f_int f_bool xs)
+       | Bool(x, xs) -> Bool(f_bool x, intbool_map f_int f_bool xs)
+       | Prazen -> Prazen
 
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_reverse] obrne vrstni red elementov [intbool_list] seznama.
  Funkcija je repno rekurzivna.
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_reverse = ()
+let intbool_reverse ib_list =
+       let rec intbool_reverse_aux acc ib_list = match ib_list with
+       | Prazen -> acc
+       | Int(x, xs) -> intbool_reverse_aux (Int(x, acc)) xs
+       | Bool(x, xs) -> intbool_reverse_aux (Bool(x, acc)) xs
+       in
+       intbool_reverse_aux Prazen ib_list
 
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_separate ib_list] loči vrednosti [ib_list] v par [list]
@@ -80,7 +109,16 @@ let rec intbool_reverse = ()
  vrednosti. Funkcija je repno rekurzivna in ohranja vrstni red elementov.
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_separate = ()
+let intbool_separate ib_list =
+       let rec intbool_separate_aux acc1 acc2 ib_list = match ib_list with
+       | Prazen -> (acc1, acc2)
+       | Int(x, xs) -> intbool_separate_aux (x :: acc1) acc2 xs
+       | Bool(x, xs) -> intbool_separate_aux acc1 (x :: acc2) xs
+       in
+       intbool_separate_aux [] [] ib_list
+
+
+
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  Določeni ste bili za vzdrževalca baze podatkov za svetovno priznano čarodejsko
@@ -98,6 +136,9 @@ let rec intbool_separate = ()
  [specialisation], ki loči med temi zaposlitvami.
 [*----------------------------------------------------------------------------*)
 
+type magic = Fire | Frost | Arcane
+
+type specialisation = Historian | Teacher | Researcher
 
 
 (*----------------------------------------------------------------------------*]
@@ -114,6 +155,14 @@ let rec intbool_separate = ()
  # professor;;
  - : wizard = {name = "Matija"; status = Employed (Fire, Teacher)}
 [*----------------------------------------------------------------------------*)
+
+type status = function
+       | Newbie
+       | Student of magic * int
+       | Employed of magic * specialisation
+
+type wizard =
+       {ime : string; status: status}
 
 
 
