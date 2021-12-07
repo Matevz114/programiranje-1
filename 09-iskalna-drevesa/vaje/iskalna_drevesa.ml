@@ -18,6 +18,16 @@
       0   6   11
 [*----------------------------------------------------------------------------*)
 
+type 'a tree = Prazno | Sestavljeno of ('a tree * 'a * 'a tree)
+
+let leaf x = Sestavljeno (Prazno, x, Prazno)
+
+let levo = Sestavljeno (leaf 0, 2, Prazno)
+
+let desno = Sestavljeno (leaf 6, 7, leaf 11)
+
+let test = Sestavljeno (levo, 5, desno)
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [mirror] vrne prezrcaljeno drevo. Na primeru [test_tree] torej vrne
@@ -33,6 +43,10 @@
  Node (Empty, 2, Node (Empty, 0, Empty)))
 [*----------------------------------------------------------------------------*)
 
+let rec mirror t = match t with
+     | Prazno -> Prazno
+     | Sestavljeno(l, x, d) -> Sestavljeno(mirror d, x, mirror l)
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [height] vrne višino oz. globino drevesa, funkcija [size] pa število
@@ -44,6 +58,9 @@
  - : int = 6
 [*----------------------------------------------------------------------------*)
 
+let rec size t = match t with
+     | Prazno -> 0
+     | Sestavljeno (l, _, r) -> size l + size r + 1
 
 (*----------------------------------------------------------------------------*]
  Funkcija [map_tree f tree] preslika drevo v novo drevo, ki vsebuje podatke
@@ -55,6 +72,9 @@
  Node (Node (Empty, true, Empty), true, Node (Empty, true, Empty)))
 [*----------------------------------------------------------------------------*)
 
+let rec map_tree f t = match t with (* Ta bo na izpitu!!!*)
+     | Prazno -> Prazno
+     | Sestavljeno(l, x, r) -> Sestavljeno(map_tree l, f x, map_tree r)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [list_of_tree] pretvori drevo v seznam. Vrstni red podatkov v seznamu
@@ -64,6 +84,9 @@
  - : int list = [0; 2; 5; 6; 7; 11]
 [*----------------------------------------------------------------------------*)
 
+let rec list_of_tree t = match t with
+     | Prazno -> []
+     | Sestavljeno(l, x, r) -> list_of_tree l @ [x] @ list_of_tree r
 
 (*----------------------------------------------------------------------------*]
  Funkcija [is_bst] preveri ali je drevo binarno iskalno drevo (Binary Search 
@@ -76,6 +99,19 @@
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
+let rec je_narascajoc l = match l with
+     | [] -> true
+     | [_] -> true
+     | x::y::xs -> if x > y then false else je_narascajoc (y::xs) 
+     (*lahko bi tudi sledeče
+     x::y::xs -> x<y && je_narascajoc(y::xs)
+     *)
+
+let is_bst tree = 
+     (*je_narascajoc (list_of_tree tree) *)
+     tree 
+      |> list_of_tree 
+      |> je_narascajoc
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  V nadaljevanju predpostavljamo, da imajo dvojiška drevesa strukturo BST.
@@ -91,6 +127,25 @@
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
+let rec insert x t = match t with
+     | Prazno -> leaf x
+     | Sestavljeno(l, y, r) when x < y ->
+          Sestavljeno(insert x l, y, r) 
+     | Sestavljeno(l, y, r) when x > y ->
+          Sestavljeno(l, y, insert x r)
+     | Sestavljeno(l, y, r) -> 
+          assert (x = y);
+          Sestavljeno(l, y, r)
+
+let rec member x t = match t with
+     | Prazno -> false
+     | Sestavljeno(l, y, r) when x < y ->
+          member x l 
+     | Sestavljeno(l, y, r) when x > y ->
+          member x r
+     | Sestavljeno(l, y, r) -> 
+          assert (x = y);
+          true
 
 (*----------------------------------------------------------------------------*]
  Funkcija [member2] ne privzame, da je drevo bst.
@@ -113,6 +168,15 @@
  - : int option = None
 [*----------------------------------------------------------------------------*)
 
+let rec minimal tree = match tree with
+     | Prazno -> None
+     | Sestavljeno(Prazno, x, _) -> Some x
+     | Sestavlejeno(l,_,_) -> minimal l
+
+
+let succ tree = match tree with
+     | Prazno -> None
+     | Sestavljeno(_, _, r) -> minimal r
 
 (*----------------------------------------------------------------------------*]
  Na predavanjih ste omenili dva načina brisanja elementov iz drevesa. Prvi 
@@ -127,6 +191,17 @@
  Node (Node (Empty, 6, Empty), 11, Empty))
 [*----------------------------------------------------------------------------*)
 
+let rec delete x tree = match tree with
+     | Prazno -> Prazno
+     | Sestavljeno(l, y, r) when y < x -> Sestavljeno(l, y, delete x r)
+     | Sestavljeno(l, y, r) when y > x -> Sestavljeno(delete x l, y, r)
+     | Sestavljeno(l, y, r) -> 
+          (*zdej smo najdli kar brišemo,
+          najdemo naslendnika in ga damo na vrh*)
+          match (succ tree) with
+               | None -> l 
+               | Some s -> Sestavljeno(l, s, delete s r)
+
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  SLOVARJI
@@ -139,6 +214,9 @@
  vrednosti, ga parametriziramo kot [('key, 'value) dict].
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
 
+type ('key, 'value) slovar = ('key * 'value) tree
+
+let neki : (string, int) slovar = leaf("b", 1)
 
 (*----------------------------------------------------------------------------*]
  Napišite testni primer [test_dict]:
@@ -159,6 +237,16 @@
  # dict_get "c" test_dict;;
  - : int option = Some (-2)
 [*----------------------------------------------------------------------------*)
+
+let rec dict_get key dict = match dict with
+     | Prazno -> None
+     | Sestavljen (l, (k,_), _) when key < k ->
+          dict_get key l
+     | Sestavljen (_, (k,_), r) when key < k ->
+          dict_get key r
+     | Sestavljen (_, (_,v), _) ->
+          Some v
+
 
       
 (*----------------------------------------------------------------------------*]
